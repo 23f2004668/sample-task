@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test App — Developer Toolbox</title>
+  <style>
+    :root {
+      --bg: #0e0f13;
+      --panel: #151821;
+      --panel-2: #1b2030;
+      --text: #e6e9ef;
+      --muted: #aab0bf;
+      --accent: #6aa6ff;
+      --accent-2: #9d7dff;
+      --good: #55d187;
+      --warn: #ffcf5f;
+      --bad: #ff6b6b;
+      --border: #2a3246;
+      --code: #edf0f7;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f8fc;
+        --panel: #ffffff;
+        --panel-2: #f2f4f9;
+        --text: #1e2430;
+        --muted: #5b6374;
+        --accent: #2b6dff;
+        --accent-2: #6a42ff;
+        --good: #0ea86e;
+        --warn: #c68a00;
+        --bad: #d63b3b;
+        --border: #dde3ef;
+        --code: #1e2430;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 600px at 85% -10%, rgba(106,166,255,0.18), transparent 40%),
+                  radial-gradient(1000px 500px at -10% -10%, rgba(157,125,255,0.15), transparent 40%),
+                  var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    header {
+      padding: 20px clamp(16px, 4vw, 36px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(20,24,32,0.8), rgba(20,24,32,0.35) 60%, transparent);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .brand .logo {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: conic-gradient(from 200deg at 50% 50%, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.06) inset, 0 10px 30px rgba(106,166,255,0.18);
+    }
+    .brand small {
+      font-weight: 500;
+      color: var(--muted);
+      margin-left: 8px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform .05s ease, border-color .15s ease, background .2s ease;
+    }
+    .tab-btn[aria-selected="true"] {
+      background: linear-gradient(180deg, rgba(106,166,255,0.18), rgba(106,166,255,0.08));
+      border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+      box-shadow: 0 6px 18px rgba(106,166,255,0.16);
+    }
+    .tab-btn:active { transform: translateY(1px); }
+
+    main {
+      padding: 24px clamp(16px, 4vw, 36px) 56px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+    }
+    .panel h2 {
+      margin: 4px 0 8px;
+      font-size: 18px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    @media (min-width: 980px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 6px 0;
+    }
+    input[type="text"], input[type="url"], select, textarea {
+      width: 100%;
+      background: #0c0e14;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .2s ease, background .2s ease;
+    }
+    @media (prefers-color-scheme: light) {
+      input[type="text"], input[type="url"], select, textarea { background: #fff; }
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+      box-shadow: 0 0 0 4px rgba(106,166,255,0.15);
+    }
+    textarea.code {
+      min-height: 220px;
+      resize: vertical;
+      tab-size: 2;
+      line-height: 1.45;
+      white-space: pre;
+      overflow: auto;
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(106,166,255,0.18), rgba(106,166,255,0.08));
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .05s ease, border-color .15s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
+    .btn.secondary {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    }
+    .btn.danger {
+      background: linear-gradient(180deg, rgba(255,107,107,0.15), rgba(255,107,107,0.08));
+      border-color: color-mix(in oklab, var(--bad) 60%, var(--border));
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .spacer { flex: 1; }
+
+    .hidden { display: none !important; }
+
+    .status-line {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      font-weight: 700;
+    }
+    .badge.good { border-color: color-mix(in oklab, var(--good) 60%, var(--border)); }
+    .badge.warn { border-color: color-mix(in oklab, var(--warn) 60%, var(--border)); }
+    .badge.bad  { border-color: color-mix(in oklab, var(--bad) 60%, var(--border)); }
+
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: var(--code);
+    }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #0b0d12;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin: 8px 0 0;
+      max-height: 420px;
+      overflow: auto;
+    }
+    @media (prefers-color-scheme: light) {
+      pre { background: #fff; }
+    }
+
+    .log {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .log:last-child { border-bottom: none; }
+    .log .lvl {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .log .lvl.log { color: var(--text); }
+    .log .lvl.info { color: var(--accent); }
+    .log .lvl.warn { color: var(--warn); }
+    .log .lvl.error { color: var(--bad); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    .regex-flags {
+      display: flex;
+      gap: 8px 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .regex-flags label { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+    .regex-highlight {
+      background: #0b0d12;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 120px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .regex-highlight mark {
+      background: rgba(106,166,255,0.3);
+      color: inherit;
+      padding: 2px 0;
+      border-radius: 4px;
+      outline: 1px solid color-mix(in oklab, var(--accent) 60%, var(--border));
+    }
+
+    .headers {
+      display: grid;
+      gap: 8px;
+    }
+    .hdr-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1.8fr auto;
+      gap: 8px;
+    }
+    .hdr-row input { height: 38px; }
+    .hdr-row .btn { height: 38px; }
+
+    details { border: 1px dashed var(--border); border-radius: 10px; padding: 8px 12px; }
+    summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+    footer {
+      margin: 24px auto;
+      opacity: 0.6;
+      text-align: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      Test App <small>Developer Toolbox</small>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Tools">
+      <button class="tab-btn" role="tab" aria-selected="true" aria-controls="tab-js" id="btn-js">JS Runner</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-regex" id="btn-regex">Regex Tester</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-http" id="btn-http">HTTP Tester</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- JS Runner -->
+    <section id="tab-js" class="panel" role="tabpanel" aria-labelledby="btn-js">
+      <h2>JavaScript Runner (sandboxed)</h2>
+      <div class="grid grid-2">
+        <div>
+          <label for="js-code">Code</label>
+          <textarea id="js-code" class="code" spellcheck="false">// Top-level await supported
+// console.log() is captured
+// The result of the last statement is returned
+
+const data = await Promise.resolve([1, 2, 3].map(x => x * 2));
+console.log('Doubled:', data);
+
+({ len: data.length, sum: data.reduce((a,b)=>a+b, 0) })</textarea>
+
+          <div class="row" style="margin-top:10px">
+            <label for="js-timeout" title="Max execution time in milliseconds">Timeout (ms)</label>
+            <input type="text" id="js-timeout" value="1500" style="max-width:120px">
+            <div class="spacer"></div>
+            <button id="js-run" class="btn">Run ▶</button>
+            <button id="js-clear" class="btn secondary">Clear Output</button>
+          </div>
+
+          <details style="margin-top:10px">
+            <summary>Security notes</summary>
+            <div style="margin-top:8px; color:var(--muted); font-size:14px">
+              The code executes in a sandboxed iframe with no network or DOM access. It supports async/await and captures console output.
+            </div>
+          </details>
+        </div>
+
+        <div>
+          <div class="status-line" id="js-status">
+            <span class="badge">Idle</span>
+            <span>Time: <b id="js-time">-</b></span>
+          </div>
+          <div id="js-logs" style="margin-top:10px"></div>
+          <label style="margin-top:12px">Result</label>
+          <pre id="js-result">—</pre>
+          <label style="margin-top:12px">Error</label>
+          <pre id="js-error">—</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Regex Tester -->
+    <section id="tab-regex" class="panel hidden" role="tabpanel" aria-labelledby="btn-regex">
+      <h2>Regex Tester</h2>
+      <div class="grid grid-2">
+        <div>
+          <label for="rx-pattern">Pattern</label>
+          <input id="rx-pattern" type="text" placeholder="e.g. (\\w+)\\s+(\\w+)" value="(\\w+)\\s+(\\w+)">
+          <div class="regex-flags" style="margin:10px 0 6px">
+            <label><input type="checkbox" class="rx-flag" value="g" checked> g</label>
+            <label><input type="checkbox" class="rx-flag" value="i"> i</label>
+            <label><input type="checkbox" class="rx-flag" value="m"> m</label>
+            <label><input type="checkbox" class="rx-flag" value="s"> s</label>
+            <label><input type="checkbox" class="rx-flag" value="u" checked> u</label>
+            <label><input type="checkbox" class="rx-flag" value="y"> y</label>
+            <div class="spacer"></div>
+            <span class="badge" id="rx-valid">Valid</span>
+          </div>
+
+          <label for="rx-input">Test String</label>
+          <textarea id="rx-input" class="code" spellcheck="false">Hello   World!
+This is a test: 2025-11-16, email: user@example.com</textarea>
+
+          <div class="row" style="margin-top:10px">
+            <button id="rx-clear" class="btn secondary">Clear</button>
+            <button id="rx-sample" class="btn">Load Sample</button>
+            <div class="spacer"></div>
+            <label>Flags</label>
+            <input type="text" id="rx-flags" value="gu" style="max-width:120px" readonly title="Combined flags">
+          </div>
+        </div>
+        <div>
+          <label>Highlight</label>
+          <div id="rx-highlight" class="regex-highlight">—</div>
+
+          <label style="margin-top:12px">Matches</label>
+          <pre id="rx-matches">—</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- HTTP Tester -->
+    <section id="tab-http" class="panel hidden" role="tabpanel" aria-labelledby="btn-http">
+      <h2>HTTP Tester</h2>
+      <div class="grid">
+        <div class="row">
+          <label for="http-method">Method</label>
+          <select id="http-method" style="max-width:140px">
+            <option>GET</option>
+            <option>POST</option>
+            <option>PUT</option>
+            <option>PATCH</option>
+            <option>DELETE</option>
+            <option>HEAD</option>
+            <option>OPTIONS</option>
+          </select>
+          <label for="http-url" style="margin-left:8px">URL</label>
+          <input type="url" id="http-url" placeholder="https://api.example.com/resource" value="https://jsonplaceholder.typicode.com/todos/1">
+          <div class="spacer"></div>
+          <button id="http-send" class="btn">Send ⟶</button>
+        </div>
+
+        <div>
+          <label>Headers</label>
+          <div class="headers" id="hdr-container"></div>
+          <div class="row">
+            <button id="hdr-add" class="btn secondary">+ Add Header</button>
+            <div class="spacer"></div>
+            <button id="http-clear" class="btn secondary">Clear</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="http-body">Body</label>
+          <textarea id="http-body" class="code" spellcheck="false" placeholder='Optional. For JSON, paste raw JSON (e.g., {"name":"Alice"})'></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="body-pretty" class="btn secondary">Pretty JSON</button>
+            <button id="body-minify" class="btn secondary">Minify JSON</button>
+            <div class="spacer"></div>
+            <label for="http-timeout" title="Abort the request after N ms">Timeout (ms)</label>
+            <input type="text" id="http-timeout" value="10000" style="max-width:120px">
+          </div>
+        </div>
+
+        <div>
+          <div class="status-line" id="http-status">
+            <span class="badge">Idle</span>
+            <span>Time: <b id="http-time">-</b></span>
+            <span>Size: <b id="http-size">-</b></span>
+          </div>
+          <details style="margin-top:10px">
+            <summary>Response Headers</summary>
+            <pre id="http-headers">—</pre>
+          </details>
+          <label style="margin-top:12px">Response Body</label>
+          <pre id="http-body-out">—</pre>
+          <label style="margin-top:12px">Errors</label>
+          <pre id="http-error">—</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>© Test App — Built for quick developer testing</footer>
+
+  <script>
+    // Utilities
+    const $ = (sel, el = document) => el.querySelector(sel);
+    const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+    const safeStringify = (value) => {
+      const seen = new WeakSet();
+      try {
+        return typeof value === 'string' ? value :
+          JSON.stringify(value, (k, v) => {
+            if (typeof v === 'bigint') return v.toString() + 'n';
+            if (typeof v === 'function') return `[Function ${v.name || 'anonymous'}]`;
+            if (typeof v === 'symbol') return v.toString();
+            if (typeof v === 'undefined') return '[undefined]';
+            if (typeof v === 'object' && v !== null) {
+              if (seen.has(v)) return '[Circular]';
+              seen.add(v);
+            }
+            return v;
+          }, 2);
+      } catch {
+        try { return String(value); } catch { return Object.prototype.toString.call(value); }
+      }
+    };
+    const prettyJSON = (txt) => {
+      try { return JSON.stringify(JSON.parse(txt), null, 2); }
+      catch { return txt; }
+    };
+
+    // Tabs
+    const tabButtons = $$('.tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        const id = btn.id.replace('btn','tab');
+        $$('main > section').forEach(s => s.classList.add('hidden'));
+        $('#' + id).classList.remove('hidden');
+        // persist tab
+        localStorage.setItem('testapp.activeTab', id);
+      });
+    });
+    const savedTab = localStorage.getItem('testapp.activeTab');
+    if (savedTab && $('#' + savedTab)) {
+      tabButtons.forEach(b => b.setAttribute('aria-selected', 'false'));
+      $$('main > section').forEach(s => s.classList.add('hidden'));
+      $('#btn-' + savedTab.split('-')[1]).setAttribute('aria-selected', 'true');
+      $('#' + savedTab).classList.remove('hidden');
+    }
+
+    // JS Runner Sandbox
+    const sandbox = (() => {
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      iframe.style.display = 'none';
+      const srcdoc = `
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>html,body{background:#fff}</style>
+<script>
+  addEventListener('message', async (e) => {
+    const data = e.data || {};
+    const id = data.id;
+    const code = String(data.code || '');
+    const timeout = Number(data.timeout) || 1500;
+    const logs = [];
+    const con = {};
+    ['log','info','warn','error'].forEach((k)=>{
+      con[k] = (...args) => { try { logs.push({ level:k, args }); } catch(_){} };
+    });
+    const start = Date.now();
+    try {
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const fn = new AsyncFunction('console', '"use strict";\\n' + code);
+      const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('Timed out after ' + timeout + 'ms')), timeout));
+      const result = await Promise.race([fn(con), timer]);
+      parent.postMessage({ id, ok: true, result, logs, time: Date.now()-start }, '*');
+    } catch (err) {
+      parent.postMessage({ id, ok: false, error: String(err && err.stack ? err.stack : err), logs, time: Date.now()-start }, '*');
+    }
+  });
+<\/script></head><body></body></html>`;
+      iframe.srcdoc = srcdoc;
+      document.body.appendChild(iframe);
+      const pending = new Map();
+      addEventListener('message', (e) => {
+        const d = e.data || {};
+        if (!d.id || !pending.has(d.id)) return;
+        const { resolve } = pending.get(d.id);
+        resolve(d);
+        pending.delete(d.id);
+      });
+      const run = (code, timeout = 1500) => new Promise((resolve) => {
+        const id = 'r_' + Math.random().toString(36).slice(2);
+        pending.set(id, { resolve });
+        iframe.contentWindow.postMessage({ id, code, timeout }, '*');
+      });
+      return { run };
+    })();
+
+    // JS Runner UI
+    const jsCode = $('#js-code');
+    const jsRun = $('#js-run');
+    const jsClear = $('#js-clear');
+    const jsTimeout = $('#js-timeout');
+    const jsStatus = $('#js-status .badge');
+    const jsTime = $('#js-time');
+    const jsLogs = $('#js-logs');
+    const jsResult = $('#js-result');
+    const jsError = $('#js-error');
+
+    jsRun.addEventListener('click', async () => {
+      jsRun.disabled = true;
+      jsStatus.textContent = 'Running...';
+      jsStatus.className = 'badge';
+      jsTime.textContent = '—';
+      jsLogs.innerHTML = '';
+      jsResult.textContent = '—';
+      jsError.textContent = '—';
+      try {
+        const res = await sandbox.run(jsCode.value, Number(jsTimeout.value || 1500));
+        jsTime.textContent = res.time + ' ms';
+        // logs
+        (res.logs || []).forEach(entry => {
+          const row = document.createElement('div');
+          row.className = 'log';
+          const lvl = document.createElement('div');
+          lvl.className = 'lvl ' + entry.level;
+          lvl.textContent = entry.level;
+          const msg = document.createElement('div');
+          msg.innerHTML = entry.args.map(a => escapeHtml(safeStringify(a))).join(' ') || ' ';
+          row.appendChild(lvl);
+          row.appendChild(msg);
+          jsLogs.appendChild(row);
+        });
+        if (res.ok) {
+          jsStatus.textContent = 'OK';
+          jsStatus.className = 'badge good';
+          jsResult.textContent = safeStringify(res.result);
+          jsError.textContent = '—';
+        } else {
+          jsStatus.textContent = 'Error';
+          jsStatus.className = 'badge bad';
+          jsError.textContent = res.error || 'Unknown error';
+          jsResult.textContent = '—';
+        }
+      } catch (err) {
+        jsStatus.textContent = 'Error';
+        jsStatus.className = 'badge bad';
+        jsError.textContent = String(err);
+      } finally {
+        jsRun.disabled = false;
+      }
+    });
+    jsClear.addEventListener('click', () => {
+      jsLogs.innerHTML = '';
+      jsResult.textContent = '—';
+      jsError.textContent = '—';
+      jsStatus.textContent = 'Idle';
+      jsStatus.className = 'badge';
+      jsTime.textContent = '—';
+    });
+
+    // Regex Tester
+    const rxPattern = $('#rx-pattern');
+    const rxFlagsCbs = $$('.rx-flag');
+    const rxFlagsField = $('#rx-flags');
+    const rxInput = $('#rx-input');
+    const rxValid = $('#rx-valid');
+    const rxHighlight = $('#rx-highlight');
+    const rxMatches = $('#rx-matches');
+    const rxClear = $('#rx-clear');
+    const rxSample = $('#rx-sample');
+
+    function getFlags() {
+      return rxFlagsCbs.filter(cb => cb.checked).map(cb => cb.value).join('');
+    }
+    function updateFlagsField() {
+      rxFlagsField.value = getFlags();
+    }
+    function updateRegex() {
+      updateFlagsField();
+      const pattern = rxPattern.value;
+      const flags = rxFlagsField.value;
+      const text = rxInput.value ?? '';
+      let re;
+      try {
+        re = new RegExp(pattern, flags);
+        rxValid.textContent = 'Valid';
+        rxValid.className = 'badge good';
+      } catch (err) {
+        rxValid.textContent = 'Invalid';
+        rxValid.className = 'badge bad';
+        rxHighlight.textContent = '—';
+        rxMatches.textContent = String(err);
+        return;
+      }
+      // Highlight
+      let html = '';
+      let idx = 0;
+      const matches = [];
+      if (!re.global) {
+        const m = re.exec(text);
+        if (m) {
+          html += escapeHtml(text.slice(0, m.index));
+          html += '<mark>' + escapeHtml(m[0] || '') + '</mark>';
+          const end = m.index + (m[0] ? m[0].length : 0);
+          html += escapeHtml(text.slice(end));
+          matches.push({ index: m.index, 0: m[0], groups: m.slice(1) });
+        } else {
+          html = escapeHtml(text);
+        }
+      } else {
+        re.lastIndex = 0;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          const start = m.index;
+          const seg = text.slice(idx, start);
+          html += escapeHtml(seg);
+          html += '<mark>' + escapeHtml(m[0] || '') + '</mark>';
+          matches.push({ index: start, 0: m[0], groups: m.slice(1) });
+          idx = start + (m[0] ? m[0].length : 0);
+          if (m[0] === '') {
+            // Avoid infinite loops on zero-length matches
+            re.lastIndex += 1;
+            idx = Math.min(idx + 1, text.length);
+          }
+        }
+        html += escapeHtml(text.slice(idx));
+      }
+      rxHighlight.innerHTML = html || '—';
+      // Matches display
+      if (matches.length === 0) {
+        rxMatches.textContent = 'No matches';
+      } else {
+        let out = '';
+        matches.forEach((m, i) => {
+          out += `#${i+1} @ index ${m.index}\n  match: ${m[0]}\n`;
+          if (m.groups && m.groups.length) {
+            m.groups.forEach((g, gi) => {
+              out += `  group ${gi+1}: ${g}\n`;
+            });
+          }
+          out += '\n';
+        });
+        rxMatches.textContent = out.trimEnd();
+      }
+      // Persist
+      localStorage.setItem('testapp.regex', JSON.stringify({ pattern, flags, text }));
+    }
+    rxPattern.addEventListener('input', updateRegex);
+    rxInput.addEventListener('input', updateRegex);
+    rxFlagsCbs.forEach(cb => cb.addEventListener('change', updateRegex));
+    rxClear.addEventListener('click', () => {
+      rxInput.value = '';
+      updateRegex();
+    });
+    rxSample.addEventListener('click', () => {
+      rxPattern.value = String(/([A-Za-z]+)\s+(\w+)|(\d{4}-\d{2}-\d{2})|([\w.-]+@[\w.-]+\.\w+)/).slice(1,-1);
+      rxFlagsCbs.forEach(cb => cb.checked = (cb.value === 'g') || (cb.value === 'u'));
+      rxInput.value = `Names: Ada Lovelace, Alan Turing
+Dates: 2025-11-16, 1999-12-31
+Emails: dev@mail.com, first.last@example.co.uk`;
+      updateRegex();
+    });
+    // Restore saved regex
+    try {
+      const savedRx = JSON.parse(localStorage.getItem('testapp.regex') || 'null');
+      if (savedRx) {
+        rxPattern.value = savedRx.pattern ?? rxPattern.value;
+        rxInput.value = savedRx.text ?? rxInput.value;
+        rxFlagsCbs.forEach(cb => cb.checked = (savedRx.flags || '').includes(cb.value));
+      }
+    } catch {}
+    updateRegex();
+
+    // HTTP Tester
+    const httpMethod = $('#http-method');
+    const httpUrl = $('#http-url');
+    const httpSend = $('#http-send');
+    const httpTimeout = $('#http-timeout');
+    const httpBody = $('#http-body');
+    const httpStatusBadge = $('#http-status .badge');
+    const httpTime = $('#http-time');
+    const httpSize = $('#http-size');
+    const httpHeadersOut = $('#http-headers');
+    const httpBodyOut = $('#http-body-out');
+    const httpError = $('#http-error');
+    const hdrContainer = $('#hdr-container');
+    const hdrAdd = $('#hdr-add');
+    const httpClear = $('#http-clear');
+    const bodyPretty = $('#body-pretty');
+    const bodyMinify = $('#body-minify');
+
+    function createHeaderRow(key = '', value = '') {
+      const row = document.createElement('div');
+      row.className = 'hdr-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Header name" value="${escapeHtml(key)}" aria-label="Header name">
+        <input type="text" placeholder="Header value" value="${escapeHtml(value)}" aria-label="Header value">
+        <button class="btn danger" title="Remove">&times;</button>
+      `;
+      row.lastElementChild.addEventListener('click', () => row.remove());
+      return row;
+    }
+    function loadHeaders(headers) {
+      hdrContainer.innerHTML = '';
+      headers.forEach(h => hdrContainer.appendChild(createHeaderRow(h[0], h[1])));
+    }
+    hdrAdd.addEventListener('click', () => hdrContainer.appendChild(createHeaderRow()));
+    httpClear.addEventListener('click', () => {
+      httpBody.value = '';
+      httpBodyOut.textContent = '—';
+      httpError.textContent = '—';
+      httpHeadersOut.textContent = '—';
+      httpTime.textContent = '—';
+      httpSize.textContent = '—';
+      httpStatusBadge.textContent = 'Idle';
+      httpStatusBadge.className = 'badge';
+    });
+    bodyPretty.addEventListener('click', () => {
+      httpBody.value = prettyJSON(httpBody.value || '');
+    });
+    bodyMinify.addEventListener('click', () => {
+      try {
+        if (httpBody.value.trim()) {
+          httpBody.value = JSON.stringify(JSON.parse(httpBody.value));
+        }
+      } catch {}
+    });
+
+    // Seed default headers
+    if (!localStorage.getItem('testapp.http.headers')) {
+      loadHeaders([['Accept', 'application/json']]);
+    } else {
+      try {
+        const savedH = JSON.parse(localStorage.getItem('testapp.http.headers') || '[]');
+        loadHeaders(savedH);
+      } catch { loadHeaders([['Accept','application/json']]); }
+    }
+
+    async function sendHttp() {
+      httpSend.disabled = true;
+      httpStatusBadge.textContent = 'Sending...';
+      httpStatusBadge.className = 'badge';
+      httpError.textContent = '—';
+      httpBodyOut.textContent = '—';
+      httpHeadersOut.textContent = '—';
+      httpTime.textContent = '—';
+      httpSize.textContent = '—';
+
+      const method = httpMethod.value || 'GET';
+      const url = httpUrl.value.trim();
+      const timeout = Number(httpTimeout.value || 10000);
+      if (!url) {
+        httpError.textContent = 'Please provide a URL.';
+        httpStatusBadge.textContent = 'Error';
+        httpStatusBadge.className = 'badge bad';
+        httpSend.disabled = false;
+        return;
+      }
+
+      const headers = new Headers();
+      const hdrList = [];
+      $$('.hdr-row', hdrContainer).forEach(row => {
+        const [kEl, vEl] = row.querySelectorAll('input');
+        const k = (kEl.value || '').trim();
+        const v = (vEl.value || '').trim();
+        if (k) {
+          headers.append(k, v);
+          hdrList.push([k, v]);
+        }
+      });
+      // Persist headers
+      localStorage.setItem('testapp.http.headers', JSON.stringify(hdrList));
+      localStorage.setItem('testapp.http.url', url);
+      localStorage.setItem('testapp.http.method', method);
+      localStorage.setItem('testapp.http.body', httpBody.value || '');
+
+      const opts = { method, headers };
+      const hasBody = !['GET','HEAD'].includes(method.toUpperCase());
+      if (hasBody) {
+        opts.body = httpBody.value || '';
+        // Set default Content-Type for JSON if looks like JSON and not set
+        const hasCT = Array.from(headers.keys()).some(k => k.toLowerCase() === 'content-type');
+        if (!hasCT && opts.body.trim().startsWith('{')) {
+          headers.set('Content-Type', 'application/json');
+        }
+      }
+
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(new Error('Timeout')), timeout);
+      const t0 = performance.now();
+      try {
+        const res = await fetch(url, { ...opts, signal: ctrl.signal, cache: 'no-store' });
+        const t1 = performance.now();
+        clearTimeout(to);
+        const ok = res.ok;
+        httpStatusBadge.textContent = `${res.status} ${res.statusText || ''}`.trim();
+        httpStatusBadge.className = 'badge ' + (ok ? 'good' : (res.status >= 400 && res.status < 500 ? 'warn' : 'bad'));
+        httpTime.textContent = `${Math.round(t1 - t0)} ms`;
+
+        // Headers
+        const hdrs = [];
+        res.headers.forEach((v, k) => hdrs.push(`${k}: ${v}`));
+        httpHeadersOut.textContent = hdrs.join('\n') || '—';
+
+        // Body
+        const ct = res.headers.get('content-type') || '';
+        let text = '';
+        if (ct.includes('application/octet-stream')) {
+          const buf = await res.arrayBuffer();
+          text = `[binary] ${buf.byteLength} bytes`;
+        } else {
+          text = await res.text();
+        }
+        httpSize.textContent = text === undefined ? '-' : (new TextEncoder().encode(text).length + ' B');
+        if (ct.includes('application/json') || (/^\s*[\[{]/.test(text))) {
+          try {
+            const json = JSON.parse(text);
+            httpBodyOut.textContent = JSON.stringify(json, null, 2);
+          } catch {
+            httpBodyOut.textContent = text || '—';
+          }
+        } else {
+          httpBodyOut.textContent = text || '—';
+        }
+      } catch (err) {
+        clearTimeout(to);
+        httpStatusBadge.textContent = 'Network Error';
+        httpStatusBadge.className = 'badge bad';
+        httpError.textContent = String(err?.message || err) + '\n\nTip: CORS or mixed content might block the request when opened from file://. Try a CORS-enabled API or run a local server.';
+      } finally {
+        httpSend.disabled = false;
+      }
+    }
+    httpSend.addEventListener('click', sendHttp);
+    // Restore saved URL/method/body
+    try {
+      const savedUrl = localStorage.getItem('testapp.http.url');
+      const savedMethod = localStorage.getItem('testapp.http.method');
+      const savedBody = localStorage.getItem('testapp.http.body');
+      if (savedUrl) httpUrl.value = savedUrl;
+      if (savedMethod) httpMethod.value = savedMethod;
+      if (savedBody) httpBody.value = savedBody;
+    } catch {}
+
+    // Keyboard shortcuts
+    addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'enter') {
+        // Run active tool
+        if (!$('#tab-js').classList.contains('hidden')) jsRun.click();
+        if (!$('#tab-http').classList.contains('hidden')) httpSend.click();
+      }
+    });
+  </script>
+</body>
+</html>
